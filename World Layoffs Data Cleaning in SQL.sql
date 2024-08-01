@@ -3,14 +3,18 @@
 SELECT *
 FROM layoffs
 ;
-
+-- Steps for Data Cleaning Process
 -- 1. Remove Duplicates
 -- 2. Standardize the Data
 -- 3. Null values or blank values
 -- 4. Remove Any Columns
 
+-- Created a staging table to perserve the raw data
+
 CREATE TABLE layoffs_staging
 LIKE layoffs;
+
+-- Copied the data from the original layoffs table, and inserted it in the layoffs_staging table
 
 SELECT *
 FROM layoffs_staging;
@@ -18,6 +22,11 @@ FROM layoffs_staging;
 INSERT layoffs_staging
 SELECT *
 FROM layoffs;
+
+/*
+Created row numbers and partitioned by all columns.
+Then created a cte to identify duplicates where the row_num > 1.
+*/
 
 SELECT *,
 ROW_NUMBER() OVER(
@@ -39,6 +48,8 @@ SELECT *
 FROM layoffs_staging
 WHERE company = 'Casper'
 ;
+
+-- Created a table to delete the duplicate rows.
 
 CREATE TABLE `layoffs_staging2` (
   `company` text,
@@ -72,6 +83,7 @@ FROM layoffs_staging2
 WHERE row_num > 1;
 
 -- Standardizing Data
+-- Used TRIM to get rid of white spaces.
 
 SELECT company, TRIM(company)
 FROM layoffs_staging2;
@@ -82,6 +94,8 @@ SET company = TRIM(company);
 SELECT DISTINCT industry
 FROM layoffs_staging2
 ORDER BY 1;
+
+-- Identified multiple similar instances of Crypto/Crypto Currency in the industry column, and standardized it as Crypto.
 
 SELECT *
 FROM layoffs_staging2
@@ -106,6 +120,8 @@ WHERE country LIKE 'United States.%';
 UPDATE layoffs_staging2
 SET country = 'United States'
 WHERE country LIKE 'United States.%';
+
+-- Standardized the date column.
 
 SELECT STR_TO_DATE(`date`,'%m/%d/%Y')
 FROM layoffs_staging2;
